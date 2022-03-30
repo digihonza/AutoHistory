@@ -15,6 +15,11 @@ variables:
   Minor: '0'
 
 steps:
+- task: CmdLine@2
+  inputs:
+    script: |
+      pwd
+      dir
 - task: DotNetCoreCLI@2
   displayName: 'Restore project dependencies'
   inputs:
