@@ -7,38 +7,44 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: ubuntu-latest
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   Major: '6'
   Minor: '0'
 
 steps:
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
+- task: DotNetCoreCLI@2
+  displayName: 'Restore project dependencies'
   inputs:
-    restoreSolution: '$(solution)'
+    command: 'restore'
+    projects: |
+      'src/**/*.csproj'
+      'test/**/*.csproj'
 
-- task: VSBuild@1
+- task: DotNetCoreCLI@2
+  displayName: 'Build API - $(buildConfiguration)'
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'build'
+    projects: |
+      'src/**/*.csproj'
+      'test/**/*.csproj'
+    arguments: '--no-restore --configuration $(buildConfiguration)'
 
-- task: VSTest@2
+- task: DotNetCoreCLI@2
+  displayName: 'Test API'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: test
+    projects: |
+      'src/**/*.csproj'
+      'test/**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
 
 - task: NuGetCommand@2
   inputs:
     command: pack
-    packagesToPack: '**/*.csproj'
+    packagesToPack: 'src/**/*.csproj'
     packDestination: '$(Build.ArtifactStagingDirectory)'
     versioningScheme: byBuildNumber
     majorVersion: '$(Major)'
